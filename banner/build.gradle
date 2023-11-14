@@ -36,6 +36,26 @@ task androidSourcesJar(type: Jar) {
     exclude "**/BuildConfig.class"
 }
 
+def sonatypeUsername = ""
+def sonatypePassword = ""
+
+// 先从 local.properties 文件中读取 sonatypeUsername 和 sonatypePassword
+def localPropertiesFile = rootProject.file("local.properties")
+if(localPropertiesFile.exists()) {
+    Properties properties = new Properties()
+    properties.load(localPropertiesFile.newDataInputStream())
+    sonatypeUsername = properties.getProperty("sonatypeUsername")
+    sonatypePassword = properties.getProperty("sonatypePassword")
+}else if(project.hasProperty("sonatypeUsername") && project.hasProperty("sonatypePassword")) {
+    // 如果 local.properties 文件中没有，就从 gradle.properties 文件中读取
+    sonatypeUsername = project.sonatypeUsername
+    sonatypePassword = project.sonatypePassword
+} else if (System.getenv("SONATYPE_USERNAME") != null && System.getenv("SONATYPE_PASSWORD") != null) {
+    // 如果 gradle.properties 文件中也没有，就从环境变量中读取
+    sonatypeUsername = System.getenv("SONATYPE_USERNAME")
+    sonatypePassword = System.getenv("SONATYPE_PASSWORD")
+}
+
 publishing {
     publications {
         release(MavenPublication) {
